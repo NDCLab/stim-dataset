@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --time=7-00:00:00
+#SBATCH --account=iacc_gbuzzell
+#SBATCH --qos=highmem1
+#SBATCH --partition=highmem1
+
+# Configuration variables
+SINGULARITY_VERSION="3.8.2"
+HM_CONTAINER="/home/data/NDClab/tools/containers/hallMonitor2/hm2_0-5-2.sif"
+DATASET=""
+
+if [ -n "$DATASET" ]; then
+    echo "Please specify a dataset in hallMonitor2.sub"
+    exit 1
+fi
+
+if [ ! -f "$HM_CONTAINER" ]; then
+    echo "HallMonitor image file not found at $HM_CONTAINER"
+    exit 2
+fi
+
+module load "singularity-$SINGULARITY_VERSION"
+
+# The command to run HallMonitor is below. Please see the script's documentation for additional options.
+singularity run "$HM_CONTAINER" "$DATASET" --no-color
