@@ -14,8 +14,7 @@ output):
 `ndclab_py.py` is a helper module, never run directly; it must sit in the
 same folder as the two Python scripts (i.e. in `code/`).
 
-These scripts are adapted by Ana García Morazzani from other lab scripts (NDCLab @ FIU)
-written by Kianoosh Hosseini and Felix Zakirov.
+These scripts are adapted by Ana García Morazzani from other lab scripts written by Kianoosh Hosseini and Felix Zakirov.
 
 The R scripts only process subjects that the Python pipeline marked as fully valid: they read
 `stim_valid_behav.csv` and stop with an error if it does not exist yet.
@@ -35,12 +34,10 @@ datasets/stim-dataset/
     stim-behavioral/s1_r1/                   steps 1-2 output (trial data, summary, valid list)
     stim-memory/s1_r1/
       csv_output/                            step 3 output (organized flanker/surprise CSVs)
-      stat_output/                           step 4 output (memory measures)
+      stat_output/                           step 4 output (memory measures, summary, exclusions)
 ```
 
-`{dataset}` below is `datasets/stim-dataset`.
-
----
+`{dataset}` in the step descriptions below is `datasets/stim-dataset`.
 
 ## Prerequisites
 
@@ -92,8 +89,6 @@ reason).
 **Criteria, in order:** processed in step 1 -> accuracy >= 0.6 ->
 at least 6 valid commission errors -> not in the manual `exclude_id_list` ->
 within +/-3 SD on `invalid_rt_percent` and `skipped_percent`.
-(Note: the `skipped_percent` outlier criterion is one the lab manual says to
-confirm with the PI.)
 
 **Input:**
 - newest `summary_s1_r1_*.csv` from step 1 (picked automatically by
@@ -126,10 +121,11 @@ RT > 200 ms).
 inclusion criteria, computes flanker performance measures and the memory
 hit-rate contrast (faces from incongruent-error vs incongruent-correct
 trials), assigns the between-subject condition from hardcoded ID lists,
-and prints group summary stats.
+and prints both a per-condition group summary and a memory-stage exclusion
+breakdown.
 
-**Additional inclusion criteria** (on top of the Python gating; counters
-for each are kept in the R environment but not printed):
+**Additional inclusion criteria** (on top of the Python gating; each
+criterion's count and dropped IDs are printed and saved -- see outputs):
 1. <= 20% of surprise trials removed for RT <= 200 ms (attentiveness)
 2. flanker accuracy >= 0.6 (fast trials excluded, no-responses count as 0)
 3. >= 8 legit incongruent errors
@@ -140,11 +136,15 @@ for each are kept in the R environment but not printed):
 - `{id}_stim_flankerDat.csv` / `{id}_stim_surpriseDat.csv` from step 3
 - `stim_valid_behav.csv` from step 2 (gating)
 
-**Output** (in `{dataset}/derivatives/stim-memory/s1_r1/stat_output/`):
-- `processed_data_stim_Proj_v1.csv` -- one row per included participant:
+**Output** (in `{dataset}/derivatives/stim-memory/s1_r1/stat_output/`, all
+overwritten on every run -- no timestamp in the filenames):
+- `stim-behavioral_memory-measures.csv` -- one row per included participant:
   accuracies, RT means (raw + log(1+rt)), flanker effects, error_hitRate,
   correct_hitRate, hitRate_error_minus_correct, condition.
-  NOTE: overwritten on every run (no timestamp in the filename).
+- `stim-behavioral_memory-summary-by-condition.csv` -- per-condition mean,
+  SD, and n for the three hit-rate measures.
+- `stim-behavioral_memory-exclusions.csv` -- one row per participant dropped
+  by the four criteria above, with the reason.
 
 **Maintenance:** new participants must be added to the hardcoded condition
 lists (Section 5) or they get condition NA in the group summary.
@@ -166,12 +166,3 @@ lists (Section 5) or they get condition NA in the group summary.
   rt_corr == rt_incon
 - error/correct analyses require >= 6 errors (Python); the memory study
   tightens this to >= 8 legit incongruent errors (R, study-specific)
-
-## Known differences that remain between the Python and R stages
-
-- log-RT: Python uses mean(log(rt)) x 1000; R uses mean(log(1 + rt)).
-  Not comparable; changing R to log(rt) is pending a decision with the
-  original author.
-- The R stage applies stricter inclusion (criteria 1-4 above), so its
-  final N is a subset of the Python-valid N. This is intentional.
-.
